@@ -139,5 +139,8 @@ Run a binary file directly, if you need to run in the background can be added to
 * PING
 * QUIT
 
-### License
+## License
 Icefiredb-proxy is under the Apache 2.0 license. See the [LICENSE](./LICENSE) directory for details.
+
+## Disclaimers
+When you use this software, you have agreed and stated that the author, maintainer and contributor of this software are not responsible for any risks, costs or problems you encounter. If you find a software defect or BUG, ​​please submit a patch to help improve it!
