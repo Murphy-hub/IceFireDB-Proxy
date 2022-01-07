@@ -50,7 +50,7 @@ var (
 func main() {
 	app := cli.NewApp()
 	app.Name = "redis proxy"
-	app.Description = "redis proxy"
+	app.Description = "IceFireDB proxy, easier to use IceFireDB, support resp protocol."
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:     "config,c",
