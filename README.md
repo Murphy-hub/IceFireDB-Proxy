@@ -26,7 +26,7 @@ Run a binary file directly, if you need to run in the background can be added to
 ```
 
 ### Command support
-#### String operating
+#### String
 * APPEND
 * BITCOUNT
 * BITPOS
@@ -52,7 +52,7 @@ Run a binary file directly, if you need to run in the background can be added to
 * TTL
 
 
-#### Set operating
+#### Set
 * SADD
 * SCARD
 * SETBIT
@@ -63,7 +63,7 @@ Run a binary file directly, if you need to run in the background can be added to
 * SREM
 * SSCAN
 
-#### List operating
+#### List
 * LINDEX
 * LINSERT
 * LLEN
@@ -78,7 +78,7 @@ Run a binary file directly, if you need to run in the background can be added to
 * RPUSH
 * RPUSHX
 
-#### hash operating
+#### hash
 * HDEL
 * HEXISTS
 * HGET
@@ -119,7 +119,7 @@ Run a binary file directly, if you need to run in the background can be added to
 * ZSCAN
 * ZSCORE
 
-#### Stream operating
+#### Stream
 * XACK
 * XADD
 * XCLAIM
@@ -134,7 +134,7 @@ Run a binary file directly, if you need to run in the background can be added to
 * XGROUP
 
 
-#### other operating
+#### others
 
 * COMMAND
 * PING
@@ -142,3 +142,6 @@ Run a binary file directly, if you need to run in the background can be added to
 
 ### License
 Icefiredb-proxy is under the Apache 2.0 license. See the [LICENSE](./LICENSE) directory for details.
+
+# Disclaimers
+When you use this software, you have agreed and stated that the author, maintainer and contributor of this software are not responsible for any risks, costs or problems you encounter. If you find a software defect or BUG, ​​please submit a patch to help improve it!
