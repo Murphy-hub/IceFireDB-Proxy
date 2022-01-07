@@ -11,15 +11,14 @@ redisdb:
   type: node # cluster、node
 #  start_nodes: "192.168.2.250:8001,192.168.2.250:8002,192.168.2.250:8003"
   start_nodes: "192.168.2.250:6379"
-  conn_timeout: 5 #单位：秒
+  conn_timeout: 5 # Unit: second
   conn_read_timeout: 1
   conn_write_timeout: 1
   conn_alive_timeout: 60
-  conn_pool_size: 80 # 连接池0代表短连接
-  slave_operate_rate: 0 #从节点承载读流量的 百分比 ： 0-> 从节点不承载任何读流量
-  cluster_update_heartbeat: 30 #redis 集群的状态更新心跳间隔：只针对读写分离开启的场景生效 : 最低5秒
+  conn_pool_size: 80 # Connection pool 0 indicates the short connection
+  slave_operate_rate: 0 # Percentage of read traffic carried by slave nodes: 0-> Slave nodes do not carry any read traffic
+  cluster_update_heartbeat: 30 # Heartbeat interval for cluster status update: Takes effect only when READ/write separation is enabled: minimum 5 seconds
 
-# 控制开启pprof
 pprof_debug:
   enable: true
   port: 16060
@@ -27,44 +26,44 @@ pprof_debug:
 log:
   level: debug
 
-# ip白名单限制
+# IP address whitelist restriction
 ip_white_list:
   enable: true
   list:
     - "127.0.0.1"
     - "localhost"
 
-# 缓存，代理高速缓存
+# Caching, proxy caching
 cache:
   enable: true
-  max_items_size: 2048 #Cache最大存储的item数量
-  default_expiration: 5000 # 缓存kv默认过期时间 (单位：毫秒)
-  cleanup_interval: 120 #cache内存清理周期（单位：秒）
+  max_items_size: 2048 #Maximum number of items stored in the Cache
+  default_expiration: 5000 # Cache KV default expiration time (milliseconds)
+  cleanup_interval: 120 #Cache memory clearing interval (unit: second)
 
 
-# monitor 监控配置
+# Monitoring configuration
 monitor:
   hotkey:
-    enable: true #是否开启hotkey监控
-    monitor_job_interval: 10 # 监控任务时间轮策略：单次休眠时间 （单位：秒）
-    monitor_job_lifetime: 20 # 监控任务时间轮策略：单次监控任务维持时间 （单位：秒）
-    second_hot_threshold: 100 #hotkey的鉴定阀值，在监控之后，如果发现key的每秒处理量高于这个阀值，则判定为hotkey
-    second_increase_threshold: 25000 #命令处理量增长速率（单位:次/秒） 如果中间件发现命令处理量增长速率高于这个阀值，则立刻开启hotkey监控
-    lru_size: 64 #hotkey最大存储空间，存储按照lru策略
-    enable_cache: false #是否开启中间件缓存功能
-    max_cache_life_time: 200 #cache 条目最大存活时间 （单位：ms）
+    enable: true #Whether to enable hotkey monitoring
+    monitor_job_interval: 10 # Monitoring task time round policy: Single sleep time (unit: second)
+    monitor_job_lifetime: 20 # Monitoring task Time round policy: Duration of a monitoring task (unit: second)
+    second_hot_threshold: 500 # Hotkey identification threshold. After monitoring, if the key processing capacity per second is higher than the threshold, the key is considered as a hotkey
+    second_increase_threshold: 25000 #Command processing increase rate (unit: second) If the command processing increase rate is higher than the threshold, the middleware immediately enables hotkey monitoring
+    lru_size: 64 #The maximum hotkey storage space is based on the LRU policy
+    enable_cache: false #Whether to enable the middleware cache function
+    max_cache_life_time: 200 #Maximum cache entry lifetime (unit: ms)
   bigkey:
-    enable: true #是否开启bigkey监控
-    key_max_bytes: 1024 #redis key最大长度限制（单位：byte）
-    value_max_bytes: 10240 #redis value最大长度限制（单位：byte）
-    lru_size: 64 #bigkey最大存储空间，存储按照lru策略
-    enable_cache: false #是否开启中间件缓存功能
-    max_cache_life_time: 200 #cache 条目最大存活时间 （单位：ms）
+    enable: true #Whether to enable bigkey monitoring
+    key_max_bytes: 1024 #Maximum redis key length (byte)
+    value_max_bytes: 10240 #Maximum redis Value length (byte)
+    lru_size: 64 #Bigkey Specifies the maximum storage space. Storage is based on the LRU policy
+    enable_cache: false #Whether to enable the middleware cache function
+    max_cache_life_time: 200 #cache Maximum entry survival time (unit: ms)
   slowquery:
-    enable: true #是否开启slowquery监控
-    slow_query_threshold: 100 # 慢查询时间限制 （单位：ms）
-    max_list_size: 32 #slowquery最大存储空间
-    slow_query_ignore_cmd: [] # 慢查忽略的命令，
+    enable: true #Whether to enable slowQuery monitoring
+    slow_query_threshold: 100 # Slow query time limit （unit：ms）
+    max_list_size: 32 #Slowquery Maximum storage space
+    slow_query_ignore_cmd: [] # Slowly check ignored commands
 
 # prometheus metrics
 prometheus_exporter:
@@ -83,7 +82,6 @@ prometheus_exporter:
     enable_mem: true
     enable_gc: true
 
-# 屏蔽命令
 ignore_cmd:
   enable: false
   cmd_list: []
