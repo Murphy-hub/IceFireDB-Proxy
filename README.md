@@ -1,7 +1,7 @@
 <p align="center">
 <img 
     src="./docs/logo.png" 
-    width="201" height="300" border="0" alt="IceFireDB-Proxy">
+    height="300" border="0" alt="IceFireDB-Proxy">
 </p>
 
 # IceFireDB-Proxy
