@@ -22,7 +22,7 @@ This project uses Go. Go check them out if you don't have them locally installed
 ### Usage
 Run a binary file directly, if you need to run in the background can be added to the systemd system management
 ```shell
-./bin/Icefiredb-proxy -c ./config/config.yaml)
+./bin/Icefiredb-proxy -c ./config/config.yaml
 ```
 
 ### Command support
