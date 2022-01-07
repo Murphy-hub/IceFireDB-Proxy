@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Licensed to the Apache Software Foundation (ASF) under one or more
+ *  * contributor license agreements.  See the NOTICE file distributed with
+ *  * this work for additional information regarding copyright ownership.
+ *  * The ASF licenses this file to You under the Apache License, Version 2.0
+ *  * (the "License"); you may not use this file except in compliance with
+ *  * the License.  You may obtain a copy of the License at
+ *  *
+ *  *     http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *
+ */
+
 package rediscluster
 
 import (
@@ -141,7 +160,7 @@ func (cluster *Cluster) multiGet(cmd string, args ...interface{}) (interface{}, 
 		}
 
 		if len(index[i].replies) < 0 {
-			//panic("unreachable")
+			// panic("unreachable")
 			return nil, fmt.Errorf("multiGet: unreachable")
 		}
 
@@ -170,16 +189,16 @@ func handleSetTask(cluster *Cluster, task *multiTask) {
 		task.err = nil
 		return
 	case kRespMove:
-		//此处在高并发+slots循环多次集中迁移时，会出现数据的多级别MOVE，对于多级别MOVE 要进行到底，一般频率为20万次中出现10次
-		//所以采用循环进行多级MOVE处理
+		// 此处在高并发+slots循环多次集中迁移时，会出现数据的多级别MOVE，对于多级别MOVE 要进行到底，一般频率为20万次中出现10次
+		// 所以采用循环进行多级MOVE处理
 		for {
-			//尝试第一次MOVE，并对结果进行判断，如果reply类型不再是MOVE类型，则证明摆脱多级MOVE，则把结果返回出去
-			//由于结果可能会发生变化，因此再进行判断
+			// 尝试第一次MOVE，并对结果进行判断，如果reply类型不再是MOVE类型，则证明摆脱多级MOVE，则把结果返回出去
+			// 由于结果可能会发生变化，因此再进行判断
 			task.reply, task.err = cluster.handleMove(task.node, task.reply.(redisError).Error(), task.cmd, task.args)
 
 			respType := checkReply(task.reply)
 
-			//如果reply类型不是MOVE类型，则 准备跳出循环、对结果进行判断，选择条件返回
+			// 如果reply类型不是MOVE类型，则 准备跳出循环、对结果进行判断，选择条件返回
 			if respType != kRespMove {
 
 				switch respType {
@@ -192,25 +211,25 @@ func handleSetTask(cluster *Cluster, task *multiTask) {
 				case kRespConnTimeout:
 					task.reply, task.err = cluster.handleConnTimeout(task.node, task.cmd, task.args)
 					return
-				case kRespClusterDown: //如果redis集群宕机，则返回宕机错误
+				case kRespClusterDown: // 如果redis集群宕机，则返回宕机错误
 					cluster.UpdateSlotsInfoByRandomNode(task.node)
 					task.err = Cluster_Down_Error
 					return
 				}
 
-				//此处return为了跳出多级MOVE的for循环
+				// 此处return为了跳出多级MOVE的for循环
 				return
 			}
 
 		}
-		//return cluster.handleMove(node, reply.(redisError).Error(), cmd, args)
+		// return cluster.handleMove(node, reply.(redisError).Error(), cmd, args)
 	case kRespAsk:
 		task.reply, task.err = cluster.handleAsk(task.node, task.reply.(redisError).Error(), task.cmd, task.args)
 		return
 	case kRespConnTimeout:
 		task.reply, task.err = cluster.handleConnTimeout(task.node, task.cmd, task.args)
 		return
-	case kRespClusterDown: //如果redis集群宕机，则返回宕机错误
+	case kRespClusterDown: // 如果redis集群宕机，则返回宕机错误
 		cluster.UpdateSlotsInfoByRandomNode(task.node)
 		task.err = Cluster_Down_Error
 		return

@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Licensed to the Apache Software Foundation (ASF) under one or more
+ *  * contributor license agreements.  See the NOTICE file distributed with
+ *  * this work for additional information regarding copyright ownership.
+ *  * The ASF licenses this file to You under the Apache License, Version 2.0
+ *  * (the "License"); you may not use this file except in compliance with
+ *  * the License.  You may obtain a copy of the License at
+ *  *
+ *  *     http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *
+ */
+
 package rediscluster
 
 import (
@@ -24,23 +43,21 @@ type Options struct {
 	KeepAlive int           // Maximum keep alive connecion in each node
 	AliveTime time.Duration // Keep alive timeout
 
-	SlaveOperateRate       int //从节点承载的读流量百分比
-	ClusterUpdateHeartbeat int //redis 集群的状态更新心跳间隔：只针对读写分离开启的场景生效
+	SlaveOperateRate       int // 从节点承载的读流量百分比
+	ClusterUpdateHeartbeat int // redis 集群的状态更新心跳间隔：只针对读写分离开启的场景生效
 }
 
-var (
-	Cluster_Down_Error = errors.New("CLUSTERDOWN")
-)
+var Cluster_Down_Error = errors.New("CLUSTERDOWN")
 
 // Cluster is a redis client that manage connections to redis nodes,
 // cache and update cluster info, and execute all kinds of commands.
 // Multiple goroutines may invoke methods on a cluster simutaneously.
 type Cluster struct {
-	slots      [kClusterSlots]*redisNode   //redis主节点槽位分布数组
-	slaveslots [kClusterSlots][]*redisNode //redis从节点槽位分布数组 由于一个主节点可能有多个从节点，所以同一个slot可能对应多个从服务器，因此需要Slice
+	slots      [kClusterSlots]*redisNode   // redis主节点槽位分布数组
+	slaveslots [kClusterSlots][]*redisNode // redis从节点槽位分布数组 由于一个主节点可能有多个从节点，所以同一个slot可能对应多个从服务器，因此需要Slice
 
-	nodes      map[string]*redisNode //redis主节点map
-	slaveNodes map[string]*redisNode //redis从节点map：这个用来存储从节点地址的映射关系
+	nodes      map[string]*redisNode // redis主节点map
+	slaveNodes map[string]*redisNode // redis从节点map：这个用来存储从节点地址的映射关系
 
 	connTimeout  time.Duration
 	readTimeout  time.Duration
@@ -56,17 +73,17 @@ type Cluster struct {
 
 	closed bool
 
-	isSlaveReadAble  bool //集群从节点是否开启读取功能
-	slaveOperateRate int  //从节点承载的读流量百分比
+	isSlaveReadAble  bool // 集群从节点是否开启读取功能
+	slaveOperateRate int  // 从节点承载的读流量百分比
 
-	clusterUpdateHeartbeat int //redis集群的状态更新心跳间隔：只针对读写分离开启的场景生效
+	clusterUpdateHeartbeat int // redis集群的状态更新心跳间隔：只针对读写分离开启的场景生效
 
 }
 
-//集群更新信号的数据结构
+// 集群更新信号的数据结构
 type updateMesg struct {
-	node      *redisNode //进行更新的redis node节点
-	movedTime time.Time  //当前信号产生的时间：用于信号限流
+	node      *redisNode // 进行更新的redis node节点
+	movedTime time.Time  // 当前信号产生的时间：用于信号限流
 }
 
 /*
@@ -88,18 +105,18 @@ func NewCluster(options *Options) (*Cluster, error) {
 		clusterUpdateHeartbeat: options.ClusterUpdateHeartbeat,
 	}
 
-	//如果开启了读流量百分比参数 则证明开启集群读写分离
+	// 如果开启了读流量百分比参数 则证明开启集群读写分离
 	if options.SlaveOperateRate > 0 {
 		cluster.isSlaveReadAble = true
 		cluster.slaveOperateRate = options.SlaveOperateRate
 	}
 
-	//初始化从节点的槽位数组,由于一个master可能会有多个slave，所以建立slice级别数据结构
+	// 初始化从节点的槽位数组,由于一个master可能会有多个slave，所以建立slice级别数据结构
 	// for i := 0; i < kClusterSlots; i++ {
 	// 	cluster.slaveslots[i] = make([]*redisNode, 0)
 	// }
 
-	//遍历集群配置中的startNode节点，通过节点进行集群状态信息的获取工作，只要有一次获取成功则退出
+	// 遍历集群配置中的startNode节点，通过节点进行集群状态信息的获取工作，只要有一次获取成功则退出
 	for i := range options.StartNodes {
 		node := &redisNode{
 			address:      options.StartNodes[i],
@@ -110,26 +127,25 @@ func NewCluster(options *Options) (*Cluster, error) {
 			aliveTime:    options.AliveTime,
 		}
 
-		//根据当前的redis节点进行集群状态更新
+		// 根据当前的redis节点进行集群状态更新
 		err := cluster.Update(node)
 		if err != nil {
-			//当前节点无效、继续尝试下一个节点
+			// 当前节点无效、继续尝试下一个节点
 			continue
 		} else {
-			//获取集群状态信息成功，异步线程进行更新信号监听。
+			// 获取集群状态信息成功，异步线程进行更新信号监听。
 			go cluster.handleUpdate()
 
 			if cluster.isSlaveReadAble {
-				//如果开启了读写分离，则开辟一个单独的协程进行心跳周期的redis集群状态更新工作
+				// 如果开启了读写分离，则开辟一个单独的协程进行心跳周期的redis集群状态更新工作
 				go func() {
 					for {
-						//KafkaLoger.CInfof("Cluster Update Slots Heartbeat.")
-						//从主节点中随机选择一个进行更新
+						// KafkaLoger.CInfof("Cluster Update Slots Heartbeat.")
+						// 从主节点中随机选择一个进行更新
 						cluster.UpdateSlotsByRandomMasterNode()
 						time.Sleep(time.Second * time.Duration(cluster.clusterUpdateHeartbeat))
 					}
 				}()
-
 			}
 
 			return cluster, nil
@@ -172,28 +188,28 @@ func (cluster *Cluster) Do(cmd string, args ...interface{}) (interface{}, error)
 
 	reply, err := node.do(cmd, args...)
 	if err != nil {
-		//这里的err不为空，一定是网络读取错误，但是一条TCP出错不应该直接调用槽位更新: 可能是此条TCP出现问题
-		//cluster.UpdateSlotsInfoByRandomNode(node)
+		// 这里的err不为空，一定是网络读取错误，但是一条TCP出错不应该直接调用槽位更新: 可能是此条TCP出现问题
+		// cluster.UpdateSlotsInfoByRandomNode(node)
 		return nil, fmt.Errorf("Do->node.do(%s) %w", cmd, err)
 	}
 
 	resp := checkReply(reply)
 
-	//检查resp类型
+	// 检查resp类型
 	switch resp {
 	case kRespOK, kRespError:
 		return reply, nil
 	case kRespMove:
-		//此处在高并发+slots循环多次集中迁移时，会出现数据的多级别MOVE，对于多级别MOVE 要进行到底，一般频率为20万次中出现10次
-		//所以采用循环进行多级MOVE处理
+		// 此处在高并发+slots循环多次集中迁移时，会出现数据的多级别MOVE，对于多级别MOVE 要进行到底，一般频率为20万次中出现10次
+		// 所以采用循环进行多级MOVE处理
 		for {
-			//尝试第一次MOVE，并对结果进行判断，如果reply类型不再是MOVE类型，则证明摆脱多级MOVE，则把结果返回出去
-			//由于结果可能会发生变化，因此再进行判断
+			// 尝试第一次MOVE，并对结果进行判断，如果reply类型不再是MOVE类型，则证明摆脱多级MOVE，则把结果返回出去
+			// 由于结果可能会发生变化，因此再进行判断
 			reply, err = cluster.handleMove(node, reply.(redisError).Error(), cmd, args)
 
 			respType := checkReply(reply)
 
-			//如果reply类型不是MOVE类型，则 准备跳出循环、对结果进行判断，选择条件返回
+			// 如果reply类型不是MOVE类型，则 准备跳出循环、对结果进行判断，选择条件返回
 			if respType != kRespMove {
 
 				switch respType {
@@ -203,24 +219,24 @@ func (cluster *Cluster) Do(cmd string, args ...interface{}) (interface{}, error)
 					return cluster.handleAsk(node, reply.(redisError).Error(), cmd, args)
 				case kRespConnTimeout:
 					return cluster.handleConnTimeout(node, cmd, args)
-				case kRespClusterDown: //如果redis集群宕机，则返回宕机错误
-					//选取可用的节点 更新集群状态信息
+				case kRespClusterDown: // 如果redis集群宕机，则返回宕机错误
+					// 选取可用的节点 更新集群状态信息
 					cluster.UpdateSlotsInfoByRandomNode(node)
 					return reply, Cluster_Down_Error
 				}
 
-				//此处return为了跳出多级MOVE的for循环
+				// 此处return为了跳出多级MOVE的for循环
 				return reply, err
 			}
 
 		}
-		//return cluster.handleMove(node, reply.(redisError).Error(), cmd, args)
+		// return cluster.handleMove(node, reply.(redisError).Error(), cmd, args)
 	case kRespAsk:
 		return cluster.handleAsk(node, reply.(redisError).Error(), cmd, args)
 	case kRespConnTimeout:
 		return cluster.handleConnTimeout(node, cmd, args)
-	case kRespClusterDown: //如果redis集群宕机，则返回宕机错误
-		//选取可用的节点 更新集群状态信息
+	case kRespClusterDown: // 如果redis集群宕机，则返回宕机错误
+		// 选取可用的节点 更新集群状态信息
 		cluster.UpdateSlotsInfoByRandomNode(node)
 		return reply, Cluster_Down_Error
 	}
@@ -241,29 +257,29 @@ func (cluster *Cluster) SlaveDo(cmd string, args ...interface{}) (interface{}, e
 		return cluster.multiGet(cmd, args...)
 	}
 
-	//选择一个slave节点
+	// 选择一个slave节点
 	node, err := cluster.getAnRandomSlaveNodeByKey(args[0])
 	// 如果从节点选择失败，则发送集群更新信号，并选择一个master节点承载请求
 	if err != nil {
-		//更新集群槽位信息: 随机选择一个master节点进行槽位更新
+		// 更新集群槽位信息: 随机选择一个master节点进行槽位更新
 		go cluster.UpdateSlotsByRandomMasterNode()
-		//KafkaLoger.CErrorf("RedisCluster Cluster-Do-SLAVE -> getAnRandomSlaveNodeByKey() [%s] -> %s.", args[0], err.Error())
+		// KafkaLoger.CErrorf("RedisCluster Cluster-Do-SLAVE -> getAnRandomSlaveNodeByKey() [%s] -> %s.", args[0], err.Error())
 
-		//选择cluser中的master节点进行key的服务承载
+		// 选择cluser中的master节点进行key的服务承载
 		node, err = cluster.getNodeByKey(args[0])
 		if err != nil {
 			return nil, fmt.Errorf("SlaveDo->cluster.getNodeByKey() %w", err)
 		}
 	}
 
-	//从node中获取一条conn链接
+	// 从node中获取一条conn链接
 	conn, err := node.getConn()
 	if err != nil {
 		return nil, fmt.Errorf("SlaveDo->node.getConn() %w", err)
 	}
 
 	switch cmd {
-	case "GET": //如果是从节点，则发送READONLY指令
+	case "GET": // 如果是从节点，则发送READONLY指令
 		if node.NodeType == SLAVE_NODE {
 			err = conn.send("READONLY")
 			if err != nil {
@@ -276,11 +292,11 @@ func (cluster *Cluster) SlaveDo(cmd string, args ...interface{}) (interface{}, e
 	err = conn.send(cmd, args...)
 	if err != nil {
 		conn.shutdown()
-		//这里的err不为空，一定是网络读取错误，但是一条TCP出错不应该直接调用槽位更新: 可能是此条TCP出现问题
+		// 这里的err不为空，一定是网络读取错误，但是一条TCP出错不应该直接调用槽位更新: 可能是此条TCP出现问题
 		return nil, fmt.Errorf("SlaveDo->conn.send(%s) %w", cmd, err)
 	}
 
-	//刷新conn缓冲区
+	// 刷新conn缓冲区
 	err = conn.flush()
 	if err != nil {
 		conn.shutdown()
@@ -288,11 +304,10 @@ func (cluster *Cluster) SlaveDo(cmd string, args ...interface{}) (interface{}, e
 	}
 
 	switch cmd {
-	case "GET": //如果是从节点，则处理前面的READONLY指令响应
+	case "GET": // 如果是从节点，则处理前面的READONLY指令响应
 		if node.NodeType == SLAVE_NODE {
 
 			reply, err := conn.receive()
-
 			if err != nil {
 				conn.shutdown()
 				return nil, fmt.Errorf("SlaveDo->node.receive->READONLY() %w", err)
@@ -306,31 +321,30 @@ func (cluster *Cluster) SlaveDo(cmd string, args ...interface{}) (interface{}, e
 	}
 
 	reply, err := conn.receive()
-
 	if err != nil {
 		conn.shutdown()
 		return nil, fmt.Errorf("SlaveDo->node.receive->READONLY() %w", err)
 	}
 
-	//回收conn连接
+	// 回收conn连接
 	node.releaseConn(conn)
 
 	resp := checkReply(reply)
-	//检查resp类型
+	// 检查resp类型
 	switch resp {
 	case kRespOK, kRespError:
 		return reply, nil
 	case kRespMove:
-		//此处在高并发+slots循环多次集中迁移时，会出现数据的多级别MOVE，对于多级别MOVE 要进行到底，一般频率为20万次中出现10次
-		//所以采用循环进行多级MOVE处理
+		// 此处在高并发+slots循环多次集中迁移时，会出现数据的多级别MOVE，对于多级别MOVE 要进行到底，一般频率为20万次中出现10次
+		// 所以采用循环进行多级MOVE处理
 		for {
-			//尝试第一次MOVE，并对结果进行判断，如果reply类型不再是MOVE类型，则证明摆脱多级MOVE，则把结果返回出去
-			//由于结果可能会发生变化，因此再进行判断
+			// 尝试第一次MOVE，并对结果进行判断，如果reply类型不再是MOVE类型，则证明摆脱多级MOVE，则把结果返回出去
+			// 由于结果可能会发生变化，因此再进行判断
 			reply, err = cluster.handleMove(node, reply.(redisError).Error(), cmd, args)
 
 			respType := checkReply(reply)
 
-			//如果reply类型不是MOVE类型，则 准备跳出循环、对结果进行判断，选择条件返回
+			// 如果reply类型不是MOVE类型，则 准备跳出循环、对结果进行判断，选择条件返回
 			if respType != kRespMove {
 
 				switch respType {
@@ -340,24 +354,24 @@ func (cluster *Cluster) SlaveDo(cmd string, args ...interface{}) (interface{}, e
 					return cluster.handleAsk(node, reply.(redisError).Error(), cmd, args)
 				case kRespConnTimeout:
 					return cluster.handleConnTimeout(node, cmd, args)
-				case kRespClusterDown: //如果redis集群宕机，则返回宕机错误
-					//选取可用的节点 更新集群状态信息
+				case kRespClusterDown: // 如果redis集群宕机，则返回宕机错误
+					// 选取可用的节点 更新集群状态信息
 					cluster.UpdateSlotsInfoByRandomNode(node)
 					return reply, Cluster_Down_Error
 				}
 
-				//此处return为了跳出多级MOVE的for循环
+				// 此处return为了跳出多级MOVE的for循环
 				return reply, err
 			}
 
 		}
-		//return cluster.handleMove(node, reply.(redisError).Error(), cmd, args)
+		// return cluster.handleMove(node, reply.(redisError).Error(), cmd, args)
 	case kRespAsk:
 		return cluster.handleAsk(node, reply.(redisError).Error(), cmd, args)
 	case kRespConnTimeout:
 		return cluster.handleConnTimeout(node, cmd, args)
-	case kRespClusterDown: //如果redis集群宕机，则返回宕机错误
-		//选取可用的节点 更新集群状态信息
+	case kRespClusterDown: // 如果redis集群宕机，则返回宕机错误
+		// 选取可用的节点 更新集群状态信息
 		cluster.UpdateSlotsInfoByRandomNode(node)
 		return reply, Cluster_Down_Error
 	}
@@ -601,50 +615,49 @@ func checkReply(reply interface{}) int {
 */
 
 func (cluster *Cluster) Update(node *redisNode) error {
-
-	//如果node指针为空 则返回错误
+	// 如果node指针为空 则返回错误
 	if node == nil {
 		return fmt.Errorf("Cluster Update error.")
 	}
 
-	info, err := Values(node.do("CLUSTER", "SLOTS")) //向node发送cluster slots命令，获取集群的槽位分布数据
+	info, err := Values(node.do("CLUSTER", "SLOTS")) // 向node发送cluster slots命令，获取集群的槽位分布数据
 	if err != nil {
 		return err
 	}
 
 	errFormat := fmt.Errorf("update: %s invalid response", node.address)
 
-	var nslots int //总槽位统计量：目前必须要全覆盖 16384
+	var nslots int // 总槽位统计量：目前必须要全覆盖 16384
 
-	//主节点slots分布存储地址: map[address][start1,end1][start2,end2][start3,end3]
+	// 主节点slots分布存储地址: map[address][start1,end1][start2,end2][start3,end3]
 	slots := make(map[string][]uint16)
 
-	//从节点slots分布存储地址
+	// 从节点slots分布存储地址
 	slaveSlots := make(map[string][]uint16)
 
 	for _, i := range info {
 		m, err := Values(i, err)
-		//当前 slot 的数据集，数据先后分布如： startOffset endOffset masterAddr\port\hash sloveAdrr\port\hash slaveAdrr\port\hash ...
-		slotInfoLen := len(m) //slot-start、slot-end、masterInfo、slaveInfo1、slaveInfo2
+		// 当前 slot 的数据集，数据先后分布如： startOffset endOffset masterAddr\port\hash sloveAdrr\port\hash slaveAdrr\port\hash ...
+		slotInfoLen := len(m) // slot-start、slot-end、masterInfo、slaveInfo1、slaveInfo2
 
-		//针对信息进行长度安全校验，保障最低有一个主节点
+		// 针对信息进行长度安全校验，保障最低有一个主节点
 		if err != nil || slotInfoLen < 3 {
 			return errFormat
 		}
 
-		//数据槽 start offset
+		// 数据槽 start offset
 		start, err := Int(m[0], err)
 		if err != nil {
 			return errFormat
 		}
 
-		//数据槽 end offset
+		// 数据槽 end offset
 		end, err := Int(m[1], err)
 		if err != nil {
 			return errFormat
 		}
 
-		//主节点 信息 结构：host port node_hash
+		// 主节点 信息 结构：host port node_hash
 		t, err := Values(m[2], err)
 
 		if err != nil || len(t) < 2 {
@@ -660,7 +673,7 @@ func (cluster *Cluster) Update(node *redisNode) error {
 		}
 		addr := fmt.Sprintf("%s:%d", ip, port)
 
-		//增加主节点槽位信息
+		// 增加主节点槽位信息
 		slot, ok := slots[addr]
 		if !ok {
 			slot = make([]uint16, 0, 2)
@@ -671,14 +684,14 @@ func (cluster *Cluster) Update(node *redisNode) error {
 		slot = append(slot, uint16(start))
 		slot = append(slot, uint16(end))
 
-		//增加主节点槽位分布数据
+		// 增加主节点槽位分布数据
 		slots[addr] = slot
 
-		//计算从节点数据
-		slaveNodesNum := slotInfoLen - 3 //计算当前node的从节点数据
+		// 计算从节点数据
+		slaveNodesNum := slotInfoLen - 3 // 计算当前node的从节点数据
 		for i := 0; i < slaveNodesNum; i++ {
-			slaveNodeInfoOffset := i + 3                   //计算从节点信息偏移量
-			st, err := Values(m[slaveNodeInfoOffset], err) //获取从节点信息
+			slaveNodeInfoOffset := i + 3                   // 计算从节点信息偏移量
+			st, err := Values(m[slaveNodeInfoOffset], err) // 获取从节点信息
 
 			if err != nil || len(st) < 2 {
 				return errFormat
@@ -687,7 +700,7 @@ func (cluster *Cluster) Update(node *redisNode) error {
 			var slaveIp string
 			var slavePort int
 
-			//获取从节点IP、Port信息
+			// 获取从节点IP、Port信息
 			_, err = Scan(st, &slaveIp, &slavePort)
 			if err != nil {
 				return errFormat
@@ -695,7 +708,7 @@ func (cluster *Cluster) Update(node *redisNode) error {
 
 			slaveAddr := fmt.Sprintf("%s:%d", slaveIp, slavePort)
 
-			//增加从节点节点槽位信息
+			// 增加从节点节点槽位信息
 			slaveSlot, ok := slaveSlots[slaveAddr]
 			if !ok {
 				slaveSlot = make([]uint16, 0, 2)
@@ -709,22 +722,22 @@ func (cluster *Cluster) Update(node *redisNode) error {
 		}
 	}
 
-	//槽位数据获取结束 更新了master 和 slave 的槽位MAP数据
+	// 槽位数据获取结束 更新了master 和 slave 的槽位MAP数据
 	// TODO: Is full coverage really needed? 判断槽位是不是全部覆盖
 	if nslots != kClusterSlots {
 		return fmt.Errorf("update: %s slots not full covered", node.address)
 	}
 
-	//获取当前时间
+	// 获取当前时间
 	t := time.Now()
 
-	//为了并发安全，增加读写锁，以下部分是低频内存操作，所以性能损耗忽略
+	// 为了并发安全，增加读写锁，以下部分是低频内存操作，所以性能损耗忽略
 	cluster.rwLock.Lock()
 	defer cluster.rwLock.Unlock()
 
 	cluster.updateTime = t
 
-	//遍历master-slots信息，更新集群中的master节点信息
+	// 遍历master-slots信息，更新集群中的master节点信息
 	for addr, slot := range slots {
 		node, ok := cluster.nodes[addr]
 		if !ok {
@@ -735,7 +748,7 @@ func (cluster *Cluster) Update(node *redisNode) error {
 				writeTimeout: cluster.writeTimeout,
 				keepAlive:    cluster.keepAlive,
 				aliveTime:    cluster.aliveTime,
-				NodeType:     MASTER_NODE, //设置节点的类型为master
+				NodeType:     MASTER_NODE, // 设置节点的类型为master
 			}
 		}
 
@@ -744,7 +757,7 @@ func (cluster *Cluster) Update(node *redisNode) error {
 			start := slot[i]
 			end := slot[i+1]
 
-			//空间换时间，针对主节点的槽位分布进行数组map，便于快速查询
+			// 空间换时间，针对主节点的槽位分布进行数组map，便于快速查询
 			for j := start; j <= end; j++ {
 				cluster.slots[j] = node
 			}
@@ -763,14 +776,14 @@ func (cluster *Cluster) Update(node *redisNode) error {
 		}
 	}
 
-	//更新集群中的从节点信息-Slave
-	//第一步：清除cluster.slaveslots的槽位数组数据，因为后面会追加数据，如果不清空就会产生累积数据，避免脏数据
+	// 更新集群中的从节点信息-Slave
+	// 第一步：清除cluster.slaveslots的槽位数组数据，因为后面会追加数据，如果不清空就会产生累积数据，避免脏数据
 	for i := 0; i < kClusterSlots; i++ {
 		cluster.slaveslots[i] = nil
 		cluster.slaveslots[i] = make([]*redisNode, 0)
 	}
 
-	//第二步：根据从节点槽位信息
+	// 第二步：根据从节点槽位信息
 	for addr, slot := range slaveSlots {
 		node, ok := cluster.slaveNodes[addr]
 		if !ok {
@@ -781,19 +794,19 @@ func (cluster *Cluster) Update(node *redisNode) error {
 				writeTimeout: cluster.writeTimeout,
 				keepAlive:    cluster.keepAlive,
 				aliveTime:    cluster.aliveTime,
-				NodeType:     SLAVE_NODE, //设置节点的类型为slave类型
+				NodeType:     SLAVE_NODE, // 设置节点的类型为slave类型
 			}
 		}
 
-		//遍历从节点槽位数据，并填充从节点槽位数组，由于一个master可能附着若干个slave，所以需要使用slice追加
+		// 遍历从节点槽位数据，并填充从节点槽位数组，由于一个master可能附着若干个slave，所以需要使用slice追加
 		n := len(slot)
 		for i := 0; i < n-1; i += 2 {
 			start := slot[i]
 			end := slot[i+1]
 
-			//空间换时间，针对从节点的槽位分布进行数组map，便于快速查询
+			// 空间换时间，针对从节点的槽位分布进行数组map，便于快速查询
 			for j := start; j <= end; j++ {
-				//如果直接 cluster.slaveslots[j] = node ，会造成覆盖，因为针对同一个槽位区间，可能有多个从节点，所以需要追加
+				// 如果直接 cluster.slaveslots[j] = node ，会造成覆盖，因为针对同一个槽位区间，可能有多个从节点，所以需要追加
 				cluster.slaveslots[j] = append(cluster.slaveslots[j], node)
 			}
 		}
@@ -802,7 +815,7 @@ func (cluster *Cluster) Update(node *redisNode) error {
 		cluster.slaveNodes[addr] = node
 	}
 
-	//针对集群中的slave节点进行剔除操作
+	// 针对集群中的slave节点进行剔除操作
 	for addr, node := range cluster.slaveNodes {
 		if node.updateTime != t {
 			node.shutdown()
@@ -822,13 +835,13 @@ func (cluster *Cluster) handleUpdate() {
 		clusterLastUpdateTime := cluster.updateTime
 		cluster.rwLock.RUnlock()
 
-		//如果集群的上一次更新时间 加上窗口值（1s） 小于 此次MOVE指令产生的时间: 证明MOVE频率过高
+		// 如果集群的上一次更新时间 加上窗口值（1s） 小于 此次MOVE指令产生的时间: 证明MOVE频率过高
 		if clusterLastUpdateTime.Add(1 * time.Second).Before(msg.movedTime) {
 
 			err := cluster.Update(msg.node)
 			if err != nil {
 				log.Printf("handleUpdate: %v\n", err)
-				//KafkaLoger.CErrorf("redistun handleUpdate wrong. err: %s", err.Error())
+				// KafkaLoger.CErrorf("redistun handleUpdate wrong. err: %s", err.Error())
 			}
 
 		}
@@ -849,7 +862,7 @@ func Inform(cluster *Cluster, node *redisNode) {
 	}
 }
 
-//根据cluster中的nodes进行同步模式节点更新
+// 根据cluster中的nodes进行同步模式节点更新
 func (cluster *Cluster) UpdateSlotsInfoByRandomNode(node *redisNode) {
 	var randomNode *redisNode
 
@@ -862,11 +875,11 @@ func (cluster *Cluster) UpdateSlotsInfoByRandomNode(node *redisNode) {
 	}
 	cluster.rwLock.RUnlock()
 
-	//通知更新节点
+	// 通知更新节点
 	Inform(cluster, randomNode)
 }
 
-//从cluster的master node中 随机选择一个master进行集群分槽数据更新
+// 从cluster的master node中 随机选择一个master进行集群分槽数据更新
 func (cluster *Cluster) UpdateSlotsByRandomMasterNode() {
 	var randomNode *redisNode
 	i := 0
@@ -874,10 +887,10 @@ func (cluster *Cluster) UpdateSlotsByRandomMasterNode() {
 
 	cluster.rwLock.RLock()
 
-	randPerm := rand.Perm(len(cluster.nodes)) //根据master节点的长度创建一个随机Perm数组
-	//随机选择一个master node进行更新状态
+	randPerm := rand.Perm(len(cluster.nodes)) // 根据master节点的长度创建一个随机Perm数组
+	// 随机选择一个master node进行更新状态
 	for _, randomNode = range cluster.nodes {
-		//随机数组里 当 元素 数值为0时 跳出循环，模拟node的随机选择
+		// 随机数组里 当 元素 数值为0时 跳出循环，模拟node的随机选择
 		if randPerm[i] == 0 {
 			break
 		}
@@ -886,7 +899,7 @@ func (cluster *Cluster) UpdateSlotsByRandomMasterNode() {
 
 	cluster.rwLock.RUnlock()
 
-	//通知更新节点
+	// 通知更新节点
 	Inform(cluster, randomNode)
 }
 
@@ -929,10 +942,9 @@ func (cluster *Cluster) getNodeByKey(arg interface{}) (*redisNode, error) {
 	return node, nil
 }
 
-//结合cluster内部参数 判断当前是否应该slave进行操作
+// 结合cluster内部参数 判断当前是否应该slave进行操作
 func (cluster *Cluster) IsSlaveOperate() bool {
-
-	//如果集群状态数据中的从节点数据为空，则证明没有slave节点，则返回false，强行走master节点
+	// 如果集群状态数据中的从节点数据为空，则证明没有slave节点，则返回false，强行走master节点
 	cluster.rwLock.RLock()
 	slaveNodeCount := len(cluster.slaveNodes)
 	isSlaveReadAble := cluster.isSlaveReadAble
@@ -943,26 +955,26 @@ func (cluster *Cluster) IsSlaveOperate() bool {
 		return false
 	}
 
-	//如果cluster中的配置 IsSlaveReadAble 为false
+	// 如果cluster中的配置 IsSlaveReadAble 为false
 	if isSlaveReadAble == false {
 		return false
 	}
 
-	//从 1-100 获取随机数
-	//rand.Seed(time.Now().UnixNano())
+	// 从 1-100 获取随机数
+	// rand.Seed(time.Now().UnixNano())
 	randNum := fastrand.Uint32n(100) + 1
 
 	if randNum <= uint32(rate) {
-		return true //如果rate低于设置的百分比，则证明需要slave操作
+		return true // 如果rate低于设置的百分比，则证明需要slave操作
 	}
 
 	return false
 }
 
-//根据key 随机的获取某一个key获取从节点 ：
-//情况缺陷，如果一个master有多个slave，则会把batch分散到多个slave节点上，造成node分散,从而增加网络开销
+// 根据key 随机的获取某一个key获取从节点 ：
+// 情况缺陷，如果一个master有多个slave，则会把batch分散到多个slave节点上，造成node分散,从而增加网络开销
 func (cluster *Cluster) getAnRandomSlaveNodeByKey(arg interface{}) (*redisNode, error) {
-	key, err := key(arg) //格式化key 处理redis key-tag
+	key, err := key(arg) // 格式化key 处理redis key-tag
 	if err != nil {
 		return nil, fmt.Errorf("getAnRandomSlaveNodeByKey: invalid key %v", key)
 	}
@@ -976,10 +988,10 @@ func (cluster *Cluster) getAnRandomSlaveNodeByKey(arg interface{}) (*redisNode, 
 		return nil, fmt.Errorf("getAnRandomSlaveNodeByKey: cluster has been closed")
 	}
 
-	nodes := cluster.slaveslots[slot] //这是一个数据元素
+	nodes := cluster.slaveslots[slot] // 这是一个数据元素
 
 	nodesCount := len(nodes)
-	if nodesCount == 0 { //从节点列表为空
+	if nodesCount == 0 { // 从节点列表为空
 		masterAddress := ""
 		if cluster.slots[slot] != nil {
 			masterAddress = cluster.slots[slot].address
@@ -988,8 +1000,8 @@ func (cluster *Cluster) getAnRandomSlaveNodeByKey(arg interface{}) (*redisNode, 
 		return nil, fmt.Errorf("getAnRandomSlaveNodeByKey: %s[%d] no alive slave of %s master found", key, slot, masterAddress)
 	}
 
-	//在从节点列表中随机选择一个node出来
-	//rand.Seed(time.Now().UnixNano())
+	// 在从节点列表中随机选择一个node出来
+	// rand.Seed(time.Now().UnixNano())
 	var nodeId uint32
 	if nodesCount == 1 {
 		nodeId = 0
@@ -1000,9 +1012,9 @@ func (cluster *Cluster) getAnRandomSlaveNodeByKey(arg interface{}) (*redisNode, 
 	return nodes[nodeId], nil
 }
 
-//根据numSeed 取余操作进行slave节点的选择，解决getAnRandomSlaveNodeByKey函数的缺陷 ：返回masterNode 主要为了slaveNode不可用的时候降级
+// 根据numSeed 取余操作进行slave节点的选择，解决getAnRandomSlaveNodeByKey函数的缺陷 ：返回masterNode 主要为了slaveNode不可用的时候降级
 func (cluster *Cluster) getAnSlaveNodeByNumSeed(arg interface{}, numSeed uint64) (slaveNode *redisNode, masterNode *redisNode, err error) {
-	key, err := key(arg) //格式化key 处理redis key-tag
+	key, err := key(arg) // 格式化key 处理redis key-tag
 	if err != nil {
 		return nil, nil, fmt.Errorf("getAnSlaveNodeByNumSeed: invalid key %v", key)
 	}
@@ -1016,10 +1028,10 @@ func (cluster *Cluster) getAnSlaveNodeByNumSeed(arg interface{}, numSeed uint64)
 		return nil, nil, fmt.Errorf("getAnSlaveNodeByNumSeed: cluster has been closed")
 	}
 
-	nodes := cluster.slaveslots[slot] //获取次slot槽位中存储的redis slave node节点slice
+	nodes := cluster.slaveslots[slot] // 获取次slot槽位中存储的redis slave node节点slice
 
 	nodesCount := len(nodes)
-	if nodesCount == 0 { //从节点列表为空：证明没有可用的slave节点，返回错误。
+	if nodesCount == 0 { // 从节点列表为空：证明没有可用的slave节点，返回错误。
 		masterAddress := ""
 		if cluster.slots[slot] != nil {
 			masterAddress = cluster.slots[slot].address
@@ -1032,11 +1044,11 @@ func (cluster *Cluster) getAnSlaveNodeByNumSeed(arg interface{}, numSeed uint64)
 	if nodesCount == 1 {
 		nodeId = 0
 	} else {
-		//由于numSeed在一个batch内是相同的，所以这个numSeed取余运算 可以保障一个batch内 对于多个slave节点均选择相同的一个slave node,降低网络损耗
+		// 由于numSeed在一个batch内是相同的，所以这个numSeed取余运算 可以保障一个batch内 对于多个slave节点均选择相同的一个slave node,降低网络损耗
 		nodeId = int(numSeed % uint64(nodesCount))
 	}
 
-	masterNode = cluster.slots[slot] //获取slave对应的master节点
+	masterNode = cluster.slots[slot] // 获取slave对应的master节点
 
 	return nodes[nodeId], masterNode, nil
 }

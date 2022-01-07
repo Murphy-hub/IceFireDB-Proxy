@@ -1,5 +1,21 @@
-// Copyright 2016 CodisLabs. All Rights Reserved.
-// Licensed under the MIT (MIT-LICENSE.txt) license.
+/*
+ *
+ *  * Licensed to the Apache Software Foundation (ASF) under one or more
+ *  * contributor license agreements.  See the NOTICE file distributed with
+ *  * this work for additional information regarding copyright ownership.
+ *  * The ASF licenses this file to You under the Apache License, Version 2.0
+ *  * (the "License"); you may not use this file except in compliance with
+ *  * the License.  You may obtain a copy of the License at
+ *  *
+ *  *     http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *
+ */
 
 package bufio2
 
@@ -117,7 +133,7 @@ func (b *Reader) ReadSlice(delim byte) ([]byte, error) {
 		return nil, b.err
 	}
 	for {
-		var index = bytes.IndexByte(b.buf[b.rpos:b.wpos], delim)
+		index := bytes.IndexByte(b.buf[b.rpos:b.wpos], delim)
 		if index >= 0 {
 			limit := b.rpos + index + 1
 			slice := b.buf[b.rpos:limit]
@@ -153,7 +169,7 @@ func (b *Reader) ReadBytes(delim byte) ([]byte, error) {
 		size += len(f)
 	}
 	var n int
-	var buf = b.slice.Make(size)
+	buf := b.slice.Make(size)
 	for _, frag := range full {
 		n += copy(buf[n:], frag)
 	}
@@ -165,7 +181,7 @@ func (b *Reader) ReadFull(n int) ([]byte, error) {
 	if b.err != nil || n == 0 {
 		return nil, b.err
 	}
-	var buf = b.slice.Make(n)
+	buf := b.slice.Make(n)
 	if _, err := io.ReadFull(b, buf); err != nil {
 		return nil, err
 	}

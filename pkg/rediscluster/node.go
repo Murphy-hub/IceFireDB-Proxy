@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Licensed to the Apache Software Foundation (ASF) under one or more
+ *  * contributor license agreements.  See the NOTICE file distributed with
+ *  * this work for additional information regarding copyright ownership.
+ *  * The ASF licenses this file to You under the Apache License, Version 2.0
+ *  * (the "License"); you may not use this file except in compliance with
+ *  * the License.  You may obtain a copy of the License at
+ *  *
+ *  *     http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *
+ */
+
 package rediscluster
 
 import (
@@ -19,12 +38,12 @@ type redisConn struct {
 	br *bufio.Reader
 	bw *bufio.Writer
 
-	//bwm *RedSHandle.WriterHandle
+	// bwm *RedSHandle.WriterHandle
 
-	//writerMemory *bytes.Buffer
-	//readerParser *RedisFastParser.ParserHandle
+	// writerMemory *bytes.Buffer
+	// readerParser *RedisFastParser.ParserHandle
 
-	//readerMemory *bytes.Buffer
+	// readerMemory *bytes.Buffer
 
 	readTimeout  time.Duration
 	writeTimeout time.Duration
@@ -61,12 +80,11 @@ type redisNode struct {
 
 	closed bool
 
-	NodeType int //master or slave
+	NodeType int // master or slave
 }
 
 func (node *redisNode) getConn() (*redisConn, error) {
-
-	//需要针对node的tcp连接池进行内存操作，所以先上锁
+	// 需要针对node的tcp连接池进行内存操作，所以先上锁
 	node.mutex.Lock()
 
 	if node.closed {
@@ -74,41 +92,40 @@ func (node *redisNode) getConn() (*redisConn, error) {
 		return nil, fmt.Errorf("getConn: connection has been closed")
 	}
 
-	//从TCP连接池中清理陈旧的TCP连接
-	//如果连接远程node节点时候设置了TCP连接存活时间 则 进行检验。
+	// 从TCP连接池中清理陈旧的TCP连接
+	// 如果连接远程node节点时候设置了TCP连接存活时间 则 进行检验。
 	if node.aliveTime > 0 {
 		for {
-			//从list中选择一个元素，如果conns列表为空 则跳出检查
+			// 从list中选择一个元素，如果conns列表为空 则跳出检查
 			elem := node.conns.Back()
 			if elem == nil {
 				break
 			}
 
-			//成功获取到一条TCP连接，进行生命期时间校验
+			// 成功获取到一条TCP连接，进行生命期时间校验
 			conn := elem.Value.(*redisConn)
 
-			//如果当前获取的TCP连接是在合法生命周期内部的，立刻退出，但是这个元素还在list中，下次获取仍然能够获取到
+			// 如果当前获取的TCP连接是在合法生命周期内部的，立刻退出，但是这个元素还在list中，下次获取仍然能够获取到
 			if conn.t.Add(node.aliveTime).After(time.Now()) {
 				break
 			}
 
-			//运行到这里，代表TCP连接生命期超时，删除此元素
+			// 运行到这里，代表TCP连接生命期超时，删除此元素
 			node.conns.Remove(elem)
 		}
 	}
 
-	//经过前面的操作，前面目的在于清理超时TCP连接
+	// 经过前面的操作，前面目的在于清理超时TCP连接
 	if node.conns.Len() <= 0 {
-		//没有TCP连接可用，所以需要新建连接，立刻需要释放锁
+		// 没有TCP连接可用，所以需要新建连接，立刻需要释放锁
 		node.mutex.Unlock()
 
 		c, err := net.DialTimeout("tcp", node.address, node.connTimeout)
-
 		if err != nil {
 			return nil, err
 		}
 
-		//var writerMemory bytes.Buffer
+		// var writerMemory bytes.Buffer
 
 		conn := &redisConn{
 			c:            c,
@@ -116,17 +133,17 @@ func (node *redisNode) getConn() (*redisConn, error) {
 			bw:           bufio.NewWriter(c),
 			readTimeout:  node.readTimeout,
 			writeTimeout: node.writeTimeout,
-			//writerMemory: &writerMemory,
+			// writerMemory: &writerMemory,
 		}
 
-		//设置内存缓冲区
-		//conn.bwm = RedSHandle.NewWriterHandle(conn.writerMemory)
-		//conn.readerParser = RedisFastParser.NewParserHandle(conn.c)
+		// 设置内存缓冲区
+		// conn.bwm = RedSHandle.NewWriterHandle(conn.writerMemory)
+		// conn.readerParser = RedisFastParser.NewParserHandle(conn.c)
 
 		return conn, nil
 	}
 
-	//获取到一条已经存在的存活TCP连接，这条TCP的生命周期也在合法时间内，所以：
+	// 获取到一条已经存在的存活TCP连接，这条TCP的生命周期也在合法时间内，所以：
 	// 1.取出元素
 	// 2.删除元素在list中的位置
 	// 3.立刻解锁
@@ -134,8 +151,8 @@ func (node *redisNode) getConn() (*redisConn, error) {
 	node.conns.Remove(elem)
 	node.mutex.Unlock()
 
-	//重置内存缓冲区
-	//elem.Value.(*redisConn).writerMemory.Reset()
+	// 重置内存缓冲区
+	// elem.Value.(*redisConn).writerMemory.Reset()
 	return elem.Value.(*redisConn), nil
 }
 
@@ -157,8 +174,8 @@ func (node *redisNode) releaseConn(conn *redisConn) {
 	conn.t = time.Now()
 	node.conns.PushFront(conn)
 
-	//重置内存缓冲区
-	//conn.writerMemory.Reset()
+	// 重置内存缓冲区
+	// conn.writerMemory.Reset()
 }
 
 func (conn *redisConn) shutdown() {
@@ -448,7 +465,7 @@ func (conn *redisConn) readReply() (interface{}, error) {
 			return nil, err
 		}
 
-		//进行二进制安全读取
+		// 进行二进制安全读取
 		p := make([]byte, n)
 
 		_, err = io.ReadFull(conn.br, p)
@@ -456,7 +473,7 @@ func (conn *redisConn) readReply() (interface{}, error) {
 			return nil, err
 		}
 
-		//如果数据正常，此处仅仅是忽略\r\n ，因此len长度为0
+		// 如果数据正常，此处仅仅是忽略\r\n ，因此len长度为0
 		if line, err := conn.readLine(); err != nil {
 			return nil, err
 		} else if len(line) != 0 {
