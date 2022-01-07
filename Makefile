@@ -1,4 +1,4 @@
-PROG=bin/redisproxy
+PROG=bin/Icefiredb-proxy
 
 
 SRCS=./cmd/proxy

@@ -7,7 +7,7 @@ Icefiredb-proxy is a high performance Redis Proxy solution written in Go, includ
 ## Table of Contents
 - [Install](#Install)
 - [Usage](#usage)
-- [Command support](#Command support)
+- [Command support](#command-support)
 - [License](#license)
 
 ### Install
@@ -22,7 +22,7 @@ This project uses Go. Go check them out if you don't have them locally installed
 ### Usage
 Run a binary file directly, if you need to run in the background can be added to the systemd system management
 ```shell
-./bin/redisproxy -c ./config/config.yaml)
+./bin/Icefiredb-proxy -c ./config/config.yaml)
 ```
 
 ### Command support
