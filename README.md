@@ -2,13 +2,21 @@
 # IceFireDB-Proxy
 [![Build](https://github.com/IceFireDB/IceFireDB-Proxy/actions/workflows/main.yml/badge.svg)](https://github.com/IceFireDB/IceFireDB-Proxy/actions/workflows/main.yml) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/IceFireDB/IceFireDB-Proxy)](https://github.com/IceFireDB/IceFireDB-Proxy/blob/master/go.mod)    
 
-IceFireDB-Proxy is a high performance Redis Proxy solution written in Go, including single node and cluster Proxy modes. Icefiredb-proxy detects request commands in real time and records logs and metrics for unstable keys, such as Big keys, hot keys, and slow keys, helping discover unreasonable data design and improving service stability.
+IceFireDB-Proxy is a high performance Redis Proxy solution written in Go.
+
+1. Complete mode: single machine and cluster mode
+2. Complete command support
+3. Complete CLUSTER Dr Status management
+4. Excellent traffic control policies: Traffic read/write separation and multi-tenant data isolation
+5. Excellent command telemetry function
+6. Bottom-fishing use of mind and base abilities that are closer to cloud native
 
 ## Table of Contents
 - [Install](#Install)
 - [Usage](#usage)
 - [Command support](#command-support)
 - [License](#license)
+
 
 ### Install
 This project uses Go. Go check them out if you don't have them locally installed.
