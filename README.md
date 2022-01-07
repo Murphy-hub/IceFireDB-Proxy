@@ -78,7 +78,7 @@ Run a binary file directly, if you need to run in the background can be added to
 * RPUSH
 * RPUSHX
 
-#### hash
+#### Hash
 * HDEL
 * HEXISTS
 * HGET
@@ -134,7 +134,7 @@ Run a binary file directly, if you need to run in the background can be added to
 * XGROUP
 
 
-#### others
+#### Others
 
 * COMMAND
 * PING
