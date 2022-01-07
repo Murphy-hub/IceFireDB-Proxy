@@ -10,6 +10,7 @@ IceFireDB-Proxy is a high performance Redis Proxy solution written in Go.
 4. Excellent traffic control policies: Traffic read/write separation and multi-tenant data isolation
 5. Excellent command telemetry function
 6. Bottom-fishing use of mind and base abilities that are closer to cloud native
+7. New framework for faster network, will be upgraded soon. [redhub](https://github.com/IceFireDB/redhub)
 
 ## Table of Contents
 - [Install](#Install)
