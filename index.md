@@ -1,37 +1,140 @@
-## Welcome to GitHub Pages
+Icefiredb-proxy is a high performance Redis Proxy solution written in Go, including single node and cluster Proxy modes. Icefiredb-proxy detects request commands in real time and records logs and metrics for unstable keys, such as Big keys, hot keys, and slow keys, helping discover unreasonable data design and improving service stability.
 
-You can use the [editor on GitHub](https://github.com/IceFireDB/IceFireDB-Proxy/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+## Table of Contents
+- [Install](#Install)
+- [Usage](#usage)
+- [Command support](#command-support)
+- [License](#license)
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+### Install
+This project uses Go. Go check them out if you don't have them locally installed.
+```text
+1. Install Go
+2. git clone https://github.com/IceFireDB/IceFireDB-Proxy.git $GOPATH/src/github.com/IceFireDB/IceFireDB-Proxy
+3. cd $GOPATH/src/github.com/IceFireDB/IceFireDB-Proxy
+4. make
 ```
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+### Usage
+Run a binary file directly, if you need to run in the background can be added to the systemd system management
+```shell
+./bin/Icefiredb-proxy -c ./config/config.yaml
+```
 
-### Jekyll Themes
+### Command support
+#### String operating
+* APPEND
+* BITCOUNT
+* BITPOS
+* DECR
+* DECRBY
+* DEL
+* EXISTS
+* GET
+* GETBIT
+* SETBIT
+* GETRANGE
+* GETSET
+* INCR
+* INCRBY
+* MGET
+* MSET
+* SET
+* SETEX
+* SETEXAT
+* SETRANGE
+* EXPIRE
+* EXPIREAT
+* TTL
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/IceFireDB/IceFireDB-Proxy/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
 
-### Support or Contact
+#### Set operating
+* SADD
+* SCARD
+* SETBIT
+* SISMEMBER
+* SMEMBERS
+* SPOP
+* SRANDMEMBER
+* SREM
+* SSCAN
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+#### List operating
+* LINDEX
+* LINSERT
+* LLEN
+* LPOP
+* LPUSH
+* LPUSHX
+* LRANGE
+* LREM
+* LSET
+* LTRIM
+* RPOP
+* RPUSH
+* RPUSHX
+
+#### hash operating
+* HDEL
+* HEXISTS
+* HGET
+* HGETALL
+* HINCRBY
+* HINCRBYFLOAT
+* HKEYS
+* HLEN
+* HMGET
+* HMSET
+* HSCAN
+* HSET
+* HSETNX
+* HSTRLEN
+* HVALS
+
+#### Sorted Sets 
+* ZADD
+* ZCARD
+* ZCOUNT
+* ZINCRBY
+* ZLEXCOUNT
+* ZPOPMAX
+* ZPOPMIN
+* ZLEXCOUNT
+* ZRANGE
+* ZRANGEBYLEX
+* ZRANGEBYSCORE
+* ZRANK
+* ZREM
+* ZREMRANGEBYLEX
+* ZREMRANGEBYRANK
+* ZREMRANGEBYSCORE
+* ZREVRANGE
+* ZREVRANGEBYLEX
+* ZREVRANGEBYSCORE
+* ZREVRANK
+* ZSCAN
+* ZSCORE
+
+#### Stream operating
+* XACK
+* XADD
+* XCLAIM
+* XDEL
+* XLEN
+* XINFO
+* XPENDING
+* XRANGE
+* XREADGROUP
+* XREVRANGE
+* XTRIM
+* XGROUP
+
+
+#### other operating
+
+* COMMAND
+* PING
+* QUIT
+
+### License
+Icefiredb-proxy is under the Apache 2.0 license. See the [LICENSE](./LICENSE) directory for details.
