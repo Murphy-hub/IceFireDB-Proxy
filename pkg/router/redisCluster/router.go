@@ -29,7 +29,6 @@ func NewRouter(cluster *rediscluster.Cluster) *Router {
 const CMDEXEC = "CMDEXEC"
 
 func (r *Router) InitCMD() {
-	r.AddCommand("WCONFIG", r.cmdWCONFIG)
 	r.AddCommand("COMMAND", r.cmdCOMMAND)
 	r.AddCommand("PING", r.cmdPING)
 	r.AddCommand("QUIT", r.cmdQUIT)

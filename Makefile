@@ -7,10 +7,10 @@ SRCS=./cmd/proxy
 # git commit hash
 COMMIT_HASH=$(shell git rev-parse --short HEAD || echo "GitNotFound")
 
-# 编译日期
+# Compile the date
 BUILD_DATE=$(shell date '+%Y-%m-%d %H:%M:%S')
 
-# 编译条件
+# compile
 CFLAGS = -ldflags "-s -w -X \"main.BuildVersion=${COMMIT_HASH}\" -X \"main.BuildDate=$(BUILD_DATE)\""
 
 GOPROXY=https://goproxy.cn,direct
@@ -21,14 +21,14 @@ all:
 	fi
 	GOPROXY=$(GOPROXY) go build $(CFLAGS) -o $(PROG) $(SRCS)
 
-# 编译race版本
+# Compiling the RACE version
 race:
 	if [ ! -d "./bin/" ]; then \
     	mkdir bin; \
     	fi
 	GOPROXY=$(GOPROXY) go build $(CFLAGS) -race -o $(PROG) $(SRCS)
 
-# release 版本
+# release version
 RELEASE_DATE = $(shell date '+%Y%m%d%H%M%S')
 RELEASE_VERSION = $(shell git rev-parse --short HEAD || echo "GitNotFound")
 RELEASE_DIR=release_bin

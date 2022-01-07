@@ -50,10 +50,8 @@ func New() (*Proxy, error) {
 				return err
 			},
 		}
-
 		p.router = proxynode.NewRouter(p.proxyClient)
 	} else {
-
 		p.proxyCluster, err = rediscluster.NewCluster(
 			&rediscluster.Options{
 				StartNodes:             strings.Split(config.Get().RedisDB.StartNodes, ","),
@@ -69,7 +67,6 @@ func New() (*Proxy, error) {
 			return nil, err
 		}
 		p.router = proxycluster.NewRouter(p.proxyCluster)
-		wconfig.Init(context.Background(), p.proxyCluster, wconfig.Config{ReadTimeOut: time.Duration(config.Get().RedisDB.ConnReadTimeOut) * time.Second})
 	}
 
 	p.StartMonitor()
