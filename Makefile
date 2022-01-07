@@ -28,17 +28,6 @@ race:
     	fi
 	GOPROXY=$(GOPROXY) go build $(CFLAGS) -race -o $(PROG) $(SRCS)
 
-# release version
-RELEASE_DATE = $(shell date '+%Y%m%d%H%M%S')
-RELEASE_VERSION = $(shell git rev-parse --short HEAD || echo "GitNotFound")
-RELEASE_DIR=release_bin
-RELEASE_BIN_NAME=RedisProxy
-release:
-	if [ ! -d "./$(RELEASE_DIR)/$(RELEASE_DATE)_$(RELEASE_VERSION)" ]; then \
-	mkdir ./$(RELEASE_DIR)/$(RELEASE_DATE)_$(RELEASE_VERSION); \
-	fi
-	GOPROXY=$(GOPROXY) go build $(CFLAGS) -o $(RELEASE_DIR)/$(RELEASE_DATE)_$(RELEASE_VERSION)/$(RELEASE_BIN_NAME) $(SRCS)
-
 clean:
 	rm -rf ./bin
 
