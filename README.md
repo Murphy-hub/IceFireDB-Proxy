@@ -12,7 +12,11 @@ IceFireDB-Proxy is a high-performance, highly available, and user-friendly Resp 
 6. Bottom-fishing use of mind and base abilities that are closer to cloud native
 7. New framework for faster network, will be upgraded soon. [redhub](https://github.com/IceFireDB/redhub)
 
+# Component Architecture
 ![comp-archotecture](./docs/comp-archotecture.png)
+
+# Communication mode
+![usage-architecture](./docs/usage-architecture.png)
 
 ## Table of Contents
 - [Install](#Install)
@@ -35,7 +39,6 @@ Run a binary file directly, if you need to run in the background can be added to
 ```shell
 ./bin/Icefiredb-proxy -c ./config/config.yaml
 ```
-![usage-architecture](./docs/usage-architecture.png)
 
 ### Command support
 #### String
