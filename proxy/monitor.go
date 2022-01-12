@@ -20,24 +20,13 @@
 package proxy
 
 import (
-	"time"
-
 	"github.com/sirupsen/logrus"
 
-	"github.com/IceFireDB/IceFireDB-Proxy/pkg/cache"
 	"github.com/IceFireDB/IceFireDB-Proxy/pkg/config"
 	"github.com/IceFireDB/IceFireDB-Proxy/pkg/monitor"
 )
 
 func (p *Proxy) StartMonitor() {
-	if config.Get().Cache.Enable {
-		p.Cache = cache.New(
-			time.Millisecond*time.Duration(config.Get().Cache.DefaultExpiration),
-			time.Second*time.Duration(config.Get().Cache.CleanupInterval),
-			config.Get().Cache.MaxItemsSize,
-		)
-	}
-
 	hotKeyMonitorConf := &monitor.HotKeyConfS{
 		Enable:                  config.Get().Monitor.HotKeyConf.Enable,
 		MonitorJobInterval:      config.Get().Monitor.HotKeyConf.MonitorJobInterval,
