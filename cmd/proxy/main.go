@@ -79,7 +79,7 @@ func start(c *cli.Context) error {
 	}
 
 	wg.Add(1)
-
+	fmt.Println("listener port:", config.Get().Proxy.LocalPort)
 	utils.GoWithRecover(func() {
 		defer wg.Done()
 		p.Run(ctx, errSignal)
@@ -90,7 +90,7 @@ func start(c *cli.Context) error {
 		return err
 	}
 
-	// 监听下线
+	// Listening to the offline
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 	for sig := range sigs {

@@ -66,11 +66,11 @@ type Cache struct {
 
 type cache struct {
 	defaultExpiration time.Duration
-	maxItemsCount     int // 最大items数量
+	maxItemsCount     int
 	items             map[string]Item
 	mu                sync.RWMutex
 	onEvicted         func(string, interface{})
-	lastCleanTime     time.Time // 上一次清理时间
+	lastCleanTime     time.Time
 	janitor           *janitor
 }
 
@@ -83,9 +83,8 @@ func (c *cache) IsReachMaxItemsCount() bool {
 // (DefaultExpiration), the cache's default expiration time is used. If it is -1
 // (NoExpiration), the item never expires.
 func (c *cache) Set(k string, x interface{}, d time.Duration) {
-	// 达到最大存储数量限制
 	if c.IsReachMaxItemsCount() {
-		c.ShoudClean() // 发送map清理信号
+		c.ShoudClean()
 		return
 	}
 
@@ -130,7 +129,6 @@ func (c *cache) SetDefault(k string, x interface{}) {
 // Add an item to the cache only if an item doesn't already exist for the given
 // key, or if the existing item has expired. Returns an error otherwise.
 func (c *cache) Add(k string, x interface{}, d time.Duration) error {
-	// 达到存储最大数量限制
 	if c.IsReachMaxItemsCount() {
 		c.ShoudClean()
 		return maxItemsCountErr

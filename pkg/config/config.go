@@ -37,8 +37,8 @@ const (
 	TypeCluster = "cluster"
 )
 
-// 代理的数据链路中不要直接使用config配置，防止race
-// 全局配置
+// Do not use config directly in the agent's data link to prevent race
+// Global configuration
 var (
 	_config          *Config
 	_ruleRedisClient *rediscluster.Cluster

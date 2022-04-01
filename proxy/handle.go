@@ -67,7 +67,6 @@ func (p *Proxy) handle(conn bareneter.Conn) {
 		for i := 0; i < respCount; i++ {
 			commandArgs[i] = resp.Array[i].Value
 		}
-
 		err = p.router.Handle(localWriteHandle, commandArgs)
 
 		if err != nil {

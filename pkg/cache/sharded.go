@@ -46,7 +46,7 @@ type shardedCache struct {
 	seed          uint32
 	m             uint32
 	cs            []*cache
-	lastCleanTime time.Time // 上一次清理时间
+	lastCleanTime time.Time
 	janitor       *shardedJanitor
 }
 
@@ -145,7 +145,7 @@ func (sc *shardedCache) Flush() {
 
 type shardedJanitor struct {
 	Interval   time.Duration
-	shoudClean chan bool // 应该清理信号
+	shoudClean chan bool
 	stop       chan bool
 }
 
@@ -156,8 +156,7 @@ func (j *shardedJanitor) Run(sc *shardedCache) {
 		select {
 		case <-tick:
 			sc.DeleteExpired()
-		case <-j.shoudClean: // 如果接到shouldClean信号
-
+		case <-j.shoudClean:
 			sc.DeleteExpired()
 		case <-j.stop:
 			return

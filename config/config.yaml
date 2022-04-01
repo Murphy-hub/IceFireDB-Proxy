@@ -2,7 +2,7 @@
 
 # proxy
 proxy:
-  local_port: 6379
+  local_port: 16379
   enable_mtls: true
 
 # remote redis config
@@ -10,7 +10,8 @@ redisdb:
 #  type: cluster # cluster、node
   type: node # cluster、node
 #  start_nodes: "192.168.2.250:8001,192.168.2.250:8002,192.168.2.250:8003"
-  start_nodes: "192.168.2.250:6379"
+#  start_nodes: "192.168.2.250:6379"
+  start_nodes: "127.0.0.1:6379"
   conn_timeout: 5 # Unit: second
   conn_read_timeout: 1
   conn_write_timeout: 1

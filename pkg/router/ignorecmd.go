@@ -31,7 +31,6 @@ func IgnoreCMDMiddleware(enable bool, cmdList []string) HandlerFunc {
 		// Ignore custom commands
 		if enable && len(cmdList) > 0 {
 			if utils.InArray(context.Cmd, cmdList) {
-				// 被限制
 				return fmt.Errorf(ErrUnknownCommand, context.Cmd)
 			}
 		}

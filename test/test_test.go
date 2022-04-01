@@ -81,7 +81,6 @@ func mustDo(tb testing.TB, c *proto.Client, args ...string) {
 	tb.Helper()
 	args, want := args[:len(args)-1], args[len(args)-1]
 	res, err := c.Do(args...)
-	// 如果是错误的话那么就不检查ok
 	if !(proto.IsError(want)) {
 		ok(tb, err)
 	}

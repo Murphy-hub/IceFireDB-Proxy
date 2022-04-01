@@ -84,8 +84,8 @@ func newProxy2Server() *ProxyTest {
 	if err != nil {
 		panic(err)
 	}
-	config.Get().RedisDB.Type = config.TypeNode
-	config.Get().RedisDB.StartNodes = ms.Addr()
+	// config.Get().RedisDB.Type = config.TypeNode
+	// config.Get().RedisDB.StartNodes = ms.Addr()
 
 	p, err := proxy.New()
 	if err != nil {
