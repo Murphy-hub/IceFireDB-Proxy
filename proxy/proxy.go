@@ -87,6 +87,8 @@ func New() (*Proxy, error) {
 		p.router = proxycluster.NewRouter(p.proxyCluster)
 	}
 
+	//create p2p element
+
 	p.StartMonitor()
 
 	p.router.Use(router.IgnoreCMDMiddleware(config.Get().IgnoreCMD.Enable, config.Get().IgnoreCMD.CMDList))
