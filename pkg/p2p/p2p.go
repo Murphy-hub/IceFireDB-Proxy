@@ -5,6 +5,7 @@
  * @LastEditTime: 2022-05-25 13:33:06
  * @FilePath: /peerchat/src/p2p.go
  */
+
 package p2p
 
 import (
@@ -34,8 +35,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const service = "manishmeganathan/peerchat"
-
 // A structure that represents a P2P Host
 type P2P struct {
 	// Represents the host context layer
@@ -52,6 +51,8 @@ type P2P struct {
 
 	// Represents the PubSub Handler
 	PubSub *pubsub.PubSub
+
+	service string
 }
 
 /*
@@ -64,7 +65,7 @@ A Kademlia DHT is then bootstrapped on this host using the default peers offered
 and a Peer Discovery service is created from this Kademlia DHT. The PubSub handler is then
 created on the host using the peer discovery service created prior.
 */
-func NewP2P() *P2P {
+func NewP2P(serviceName string) *P2P {
 	// Setup a background context
 	ctx := context.Background()
 
@@ -89,6 +90,10 @@ func NewP2P() *P2P {
 	// Debug log
 	logrus.Debugln("Created the PubSub Handler.")
 
+	//set p2p cid default service name
+	if serviceName == "" {
+		serviceName = "p2p_redis_proxy_service"
+	}
 	// Return the P2P object
 	return &P2P{
 		Ctx:       ctx,
@@ -96,6 +101,7 @@ func NewP2P() *P2P {
 		KadDHT:    kaddht,
 		Discovery: routingdiscovery,
 		PubSub:    pubsubhandler,
+		service:   serviceName,
 	}
 }
 
@@ -106,7 +112,7 @@ func NewP2P() *P2P {
 // of peer address information until the peer channel closes
 func (p2p *P2P) AdvertiseConnect() {
 	// Advertise the availabilty of the service on this node
-	ttl, err := p2p.Discovery.Advertise(p2p.Ctx, service)
+	ttl, err := p2p.Discovery.Advertise(p2p.Ctx, p2p.service)
 	// Debug log
 	logrus.Debugln("Advertised the PeerChat Service.")
 	// Sleep to give time for the advertisment to propogate
@@ -115,7 +121,7 @@ func (p2p *P2P) AdvertiseConnect() {
 	logrus.Debugf("Service Time-to-Live is %s", ttl)
 
 	// Find all peers advertising the same service
-	peerchan, err := p2p.Discovery.FindPeers(p2p.Ctx, service)
+	peerchan, err := p2p.Discovery.FindPeers(p2p.Ctx, p2p.service)
 	// Handle any potential error
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -138,7 +144,7 @@ func (p2p *P2P) AdvertiseConnect() {
 // of peer address information until the peer channel closes
 func (p2p *P2P) AnnounceConnect() {
 	// Generate the Service CID
-	cidvalue := generateCID(service)
+	cidvalue := generateCID(p2p.service)
 	// Trace log
 	logrus.Debug("cidvalue ", cidvalue.String())
 	logrus.Traceln("Generated the Service CID.")

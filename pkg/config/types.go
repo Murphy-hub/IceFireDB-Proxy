@@ -38,6 +38,7 @@ type Config struct {
 type P2PS struct {
 	ServiceDiscoveryID  string `mapstructure:"service_discovery_id" json:"service_discovery_id"`
 	ServiceCommandTopic string `mapstructure:"service_command_topic" json:"service_command_topic"`
+	ServiceDiscoverMode string `mapstructure:"service_discover_mode" json:"service_discover_mode"`
 }
 
 type ProxyS struct {

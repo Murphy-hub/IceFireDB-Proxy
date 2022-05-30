@@ -8,6 +8,8 @@ proxy:
 # p2p config
 p2p:
   service_discovery_id: "p2p_redis_proxy_service"
+  service_command_topic: "p2p_redis_proxy_service_topic"
+  service_discover_mode: "advertise" # advertise or announce
 
 # remote redis config
 redisdb:
