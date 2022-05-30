@@ -22,6 +22,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -77,6 +78,26 @@ func start(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	// debug p2p pub sub message
+
+	log.Println(p.P2pSubPub.PeerList())
+	go func() {
+		for {
+			p.P2pSubPub.Outbound <- "hello"
+			time.Sleep(time.Second)
+			log.Println("send.")
+		}
+
+	}()
+
+	go func() {
+		for {
+			data := <-p.P2pSubPub.Inbound
+			log.Println(data.Message)
+		}
+
+	}()
 
 	wg.Add(1)
 	fmt.Println("listener port:", config.Get().Proxy.LocalPort)

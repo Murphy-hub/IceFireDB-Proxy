@@ -91,32 +91,36 @@ func New() (*Proxy, error) {
 		p.router = proxycluster.NewRouter(p.proxyCluster)
 	}
 
-	//create p2p element
-	p2phost := p2p.NewP2P(config.Get().P2P.ServiceDiscoveryID) //create p2p
-	p.P2pHost = p2phost
+	// if enable p2p command pubsub mode,then create p2p pubsub handle
+	if config.Get().P2P.Enable {
+		//create p2p element
+		p2phost := p2p.NewP2P(config.Get().P2P.ServiceDiscoveryID) //create p2p
+		p.P2pHost = p2phost
 
-	log.Println("Completed P2P Setup")
+		log.Println("Completed P2P Setup")
 
-	// Connect to peers with the chosen discovery method
-	switch strings.ToLower(config.Get().P2P.ServiceDiscoverMode) {
-	case "announce":
-		p2phost.AnnounceConnect() //KadDHT p2p net create
-	case "advertise":
-		p2phost.AdvertiseConnect()
-	default:
-		p2phost.AdvertiseConnect()
+		// Connect to peers with the chosen discovery method
+		switch strings.ToLower(config.Get().P2P.ServiceDiscoverMode) {
+		case "announce":
+			p2phost.AnnounceConnect() //KadDHT p2p net create
+		case "advertise":
+			p2phost.AdvertiseConnect()
+		default:
+			p2phost.AdvertiseConnect()
+		}
+
+		log.Println("Connected to P2P Service Peers")
+
+		p.P2pSubPub, err = p2p.JoinPubSub(p.P2pHost, "redis-client", config.Get().P2P.ServiceCommandTopic)
+
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+
+		log.Printf("Successfully joined [%s] P2P channel. \n", config.Get().P2P.ServiceCommandTopic)
+
 	}
-
-	log.Println("Connected to P2P Service Peers")
-
-	p.P2pSubPub, err = p2p.JoinPubSub(p.P2pHost, "redis-client", config.Get().P2P.ServiceCommandTopic)
-
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	log.Printf("Successfully joined [%s] P2P channel. \n", config.Get().P2P.ServiceCommandTopic)
 
 	p.StartMonitor()
 
