@@ -119,7 +119,6 @@ func New() (*Proxy, error) {
 		}
 
 		log.Printf("Successfully joined [%s] P2P channel. \n", config.Get().P2P.ServiceCommandTopic)
-
 	}
 
 	p.StartMonitor()

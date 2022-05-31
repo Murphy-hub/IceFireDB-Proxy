@@ -79,14 +79,11 @@ func start(c *cli.Context) error {
 		return err
 	}
 
-	// debug p2p pub sub message
-
-	log.Println(p.P2pSubPub.PeerList())
+	//p2p pub sub message
 	go func() {
 		for {
-			p.P2pSubPub.Outbound <- "hello"
+			p.P2pSubPub.Outbound <- fmt.Sprintf("%s say \"hello\"", p.P2pHost.Host.ID())
 			time.Sleep(time.Second)
-			log.Println("send.")
 		}
 
 	}()
@@ -165,13 +162,9 @@ func debug() {
 }
 
 func showBanner() {
-	logo := `
- ____    _____   ____    _    ____        ____    ____    ____   ___  _  ___  _
-/  __\  /  __/  /  _ \  / \  / ___\      /  __\  /  __\  /  _ \  \  \//  \  \//
-|  \/|  |  \    | | \|  | |  |    \      |  \/|  |  \/|  | / \|   \  /    \  / 
-|    /  |  /_   | |_/|  | |  \___ |      |  __/  |    /  | \_/|   /  \    / /  
-\_/\_\  \____\  \____/  \_/  \____/      \_/     \_/\_\  \____/  /__/\\  /_/   
-                                                                               `
+	logo := `╦═╗┌─┐┌┬┐┬┌─┐  ╔═╗┬─┐┌─┐─┐ ┬┬ ┬
+╠╦╝├┤  │││└─┐  ╠═╝├┬┘│ │┌┴┬┘└┬┘
+╩╚═└─┘─┴┘┴└─┘  ╩  ┴└─└─┘┴ └─ ┴ `
 	fmt.Println(logo)
 	fmt.Println("Build Version: ", BuildVersion, "  Date: ", BuildDate)
 }
