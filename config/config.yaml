@@ -3,7 +3,14 @@
 # proxy
 proxy:
   local_port: 16379
-  enable_mtls: true
+  enable_mtls: false
+
+# p2p config
+p2p:
+  enable: true
+  service_discovery_id: "p2p_redis_proxy_service"
+  service_command_topic: "p2p_redis_proxy_service_topic"
+  service_discover_mode: "advertise" # advertise or announce
 
 # remote redis config
 redisdb:
@@ -45,7 +52,7 @@ cache:
 # Monitoring configuration
 monitor:
   hotkey:
-    enable: true #Whether to enable hotkey monitoring
+    enable: false #Whether to enable hotkey monitoring
     monitor_job_interval: 10 # Monitoring task time round policy: Single sleep time (unit: second)
     monitor_job_lifetime: 20 # Monitoring task Time round policy: Duration of a monitoring task (unit: second)
     second_hot_threshold: 500 # Hotkey identification threshold. After monitoring, if the key processing capacity per second is higher than the threshold, the key is considered as a hotkey
@@ -54,14 +61,14 @@ monitor:
     enable_cache: false #Whether to enable the middleware cache function
     max_cache_life_time: 200 #Maximum cache entry lifetime (unit: ms)
   bigkey:
-    enable: true #Whether to enable bigkey monitoring
+    enable: false #Whether to enable bigkey monitoring
     key_max_bytes: 1024 #Maximum redis key length (byte)
     value_max_bytes: 10240 #Maximum redis Value length (byte)
     lru_size: 64 #Bigkey Specifies the maximum storage space. Storage is based on the LRU policy
     enable_cache: false #Whether to enable the middleware cache function
     max_cache_life_time: 200 #cache Maximum entry survival time (unit: ms)
   slowquery:
-    enable: true #Whether to enable slowQuery monitoring
+    enable: false #Whether to enable slowQuery monitoring
     slow_query_threshold: 100 # Slow query time limit （unit：ms）
     max_list_size: 32 #Slowquery Maximum storage space
     slow_query_ignore_cmd: [] # Slowly check ignored commands

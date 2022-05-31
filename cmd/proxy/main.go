@@ -22,6 +22,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -77,6 +78,23 @@ func start(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	//p2p pub sub message
+	go func() {
+		for {
+			p.P2pSubPub.Outbound <- fmt.Sprintf("%s say \"hello\"", p.P2pHost.Host.ID())
+			time.Sleep(time.Second)
+		}
+
+	}()
+
+	go func() {
+		for {
+			data := <-p.P2pSubPub.Inbound
+			log.Println(data.Message)
+		}
+
+	}()
 
 	wg.Add(1)
 	fmt.Println("listener port:", config.Get().Proxy.LocalPort)
@@ -144,13 +162,9 @@ func debug() {
 }
 
 func showBanner() {
-	logo := `
- ____    _____   ____    _    ____        ____    ____    ____   ___  _  ___  _
-/  __\  /  __/  /  _ \  / \  / ___\      /  __\  /  __\  /  _ \  \  \//  \  \//
-|  \/|  |  \    | | \|  | |  |    \      |  \/|  |  \/|  | / \|   \  /    \  / 
-|    /  |  /_   | |_/|  | |  \___ |      |  __/  |    /  | \_/|   /  \    / /  
-\_/\_\  \____\  \____/  \_/  \____/      \_/     \_/\_\  \____/  /__/\\  /_/   
-                                                                               `
+	logo := `╦═╗┌─┐┌┬┐┬┌─┐  ╔═╗┬─┐┌─┐─┐ ┬┬ ┬
+╠╦╝├┤  │││└─┐  ╠═╝├┬┘│ │┌┴┬┘└┬┘
+╩╚═└─┘─┴┘┴└─┘  ╩  ┴└─└─┘┴ └─ ┴ `
 	fmt.Println(logo)
 	fmt.Println("Build Version: ", BuildVersion, "  Date: ", BuildDate)
 }
