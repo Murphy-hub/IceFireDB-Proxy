@@ -26,6 +26,7 @@ type IRoutes interface {
 	AddCommand(string, ...HandlerFunc) IRoutes
 	InitCMD()
 	Handle(w *RedSHandle.WriterHandle, args []interface{}) error
+	Sync(args []interface{}) error
 	Close() error
 }
 
