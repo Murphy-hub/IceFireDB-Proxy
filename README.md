@@ -2,7 +2,7 @@
 # IceFireDB-Proxy
 [![Build](https://github.com/IceFireDB/IceFireDB-Proxy/actions/workflows/main.yml/badge.svg)](https://github.com/IceFireDB/IceFireDB-Proxy/actions/workflows/main.yml) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/IceFireDB/IceFireDB-Proxy)](https://github.com/IceFireDB/IceFireDB-Proxy/blob/master/go.mod)    
 
-IceFireDB-Proxy is a high-performance, highly available, and user-friendly Resp protocol cluster proxy solution.
+IceFireDB-Proxy is a high-performance, high-availability, and user-friendly Resp protocol cluster proxy solution. It is supporting P2P networking and is a network component in the IceFireDB ecosystem.
 
 1. Complete data source mode support: stand-alone, cluster mode
 2. Rich command support
