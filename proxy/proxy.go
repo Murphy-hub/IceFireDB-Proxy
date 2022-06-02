@@ -93,8 +93,8 @@ func New() (*Proxy, error) {
 
 	// if enable p2p command pubsub mode,then create p2p pubsub handle
 	if config.Get().P2P.Enable {
-		//create p2p element
-		p2phost := p2p.NewP2P(config.Get().P2P.ServiceDiscoveryID) //create p2p
+		// create p2p element
+		p2phost := p2p.NewP2P(config.Get().P2P.ServiceDiscoveryID) // create p2p
 		p.P2pHost = p2phost
 
 		log.Println("Completed P2P Setup")
@@ -102,7 +102,7 @@ func New() (*Proxy, error) {
 		// Connect to peers with the chosen discovery method
 		switch strings.ToLower(config.Get().P2P.ServiceDiscoverMode) {
 		case "announce":
-			p2phost.AnnounceConnect() //KadDHT p2p net create
+			p2phost.AnnounceConnect() // KadDHT p2p net create
 		case "advertise":
 			p2phost.AdvertiseConnect()
 		default:
@@ -117,7 +117,6 @@ func New() (*Proxy, error) {
 			log.Println(err)
 			return nil, err
 		}
-
 		log.Printf("Successfully joined [%s] P2P channel. \n", config.Get().P2P.ServiceCommandTopic)
 	}
 
@@ -126,6 +125,9 @@ func New() (*Proxy, error) {
 	p.router.Use(router.IgnoreCMDMiddleware(config.Get().IgnoreCMD.Enable, config.Get().IgnoreCMD.CMDList))
 
 	p.router.Use(router.KeyMonitorMiddleware(p.Monitor, config.Get().Monitor.SlowQueryConf.SlowQueryIgnoreCMD))
+	if config.Get().P2P.Enable {
+		p.router.Use(router.PubSubMiddleware(p.router, p.P2pSubPub))
+	}
 	p.router.InitCMD()
 
 	p.server = bareneter.NewServerNetwork("tcp",
