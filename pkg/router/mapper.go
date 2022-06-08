@@ -187,6 +187,8 @@ func init() {
 		{"PFSELFTEST", 0, greater(1)},
 		{"PING", 0, greater(1)},
 		{"POST", FlagNotAllow, greater(1)},
+		{"PPUB", FlagWrite, greater(3)},
+		{"PSUB", 0, greater(1)},
 		{"PSETEX", FlagWrite, equal(4)},
 		{"PSUBSCRIBE", FlagNotAllow, greater(2)},
 		{"PSYNC", FlagNotAllow, greater(1)},

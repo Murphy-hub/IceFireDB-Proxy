@@ -55,6 +55,8 @@ func (r *Router) InitCMD() {
 	r.AddCommand("PING", r.cmdPING)
 	r.AddCommand("QUIT", r.cmdQUIT)
 	r.AddCommand(CMDEXEC, r.cmdCMDEXEC)
+	r.AddCommand("PPUB", r.cmdPpub)
+	r.AddCommand("PSUB", r.cmdPsub)
 }
 
 func (r *Router) Handle(w *RedSHandle.WriterHandle, args []interface{}) error {

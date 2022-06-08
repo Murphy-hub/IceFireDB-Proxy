@@ -22,6 +22,7 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"github.com/IceFireDB/IceFireDB-Proxy/pkg/ppubsub"
 	"log"
 	"strings"
 	"time"
@@ -111,13 +112,16 @@ func New() (*Proxy, error) {
 
 		log.Println("Connected to P2P Service Peers")
 
-		p.P2pSubPub, err = p2p.JoinPubSub(p.P2pHost, "redis-client", config.Get().P2P.ServiceCommandTopic)
+		//p.P2pSubPub, err = p2p.JoinPubSub(p.P2pHost, "redis-client", config.Get().P2P.ServiceCommandTopic)
+		//
+		//if err != nil {
+		//	log.Println(err)
+		//	return nil, err
+		//}
+		//log.Printf("Successfully joined [%s] P2P channel. \n", config.Get().P2P.ServiceCommandTopic)
 
-		if err != nil {
-			log.Println(err)
-			return nil, err
-		}
-		log.Printf("Successfully joined [%s] P2P channel. \n", config.Get().P2P.ServiceCommandTopic)
+		// 初始化ppubsub
+		ppubsub.InitPubSub(context.Background(), p.P2pHost)
 	}
 
 	p.StartMonitor()
@@ -126,7 +130,7 @@ func New() (*Proxy, error) {
 
 	p.router.Use(router.KeyMonitorMiddleware(p.Monitor, config.Get().Monitor.SlowQueryConf.SlowQueryIgnoreCMD))
 	if config.Get().P2P.Enable {
-		p.router.Use(router.PubSubMiddleware(p.router, p.P2pSubPub))
+		//p.router.Use(router.PubSubMiddleware(p.router, p.P2pSubPub))
 	}
 	p.router.InitCMD()
 
