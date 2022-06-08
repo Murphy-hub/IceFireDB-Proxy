@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/IceFireDB/IceFireDB-Proxy/pkg/RedSHandle"
 	"github.com/IceFireDB/IceFireDB-Proxy/pkg/p2p"
+	"github.com/IceFireDB/IceFireDB-Proxy/pkg/router"
 	"github.com/libp2p/go-libp2p-core/peer"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"log"
@@ -28,20 +30,20 @@ type pubsubStore struct {
 	ctx          context.Context
 	p2p          *p2p.P2P
 	join         map[string]*PubSub
+	writer       map[string]map[string]*RedSHandle.WriterHandle
 }
 
 func NewPubsubStore(ctx context.Context, p2p *p2p.P2P) *pubsubStore {
 	s := &pubsubStore{
-		ctx:  ctx,
-		p2p:  p2p,
-		join: make(map[string]*PubSub),
+		ctx:    ctx,
+		p2p:    p2p,
+		join:   make(map[string]*PubSub),
+		writer: make(map[string]map[string]*RedSHandle.WriterHandle),
 	}
 	return s
 }
 
 func Pub(topicName string, message string) error {
-	aa := pss
-	fmt.Println(&aa)
 	if _, ok := pss.join[topicName]; !ok {
 		p, err := JoinPubSub(pss.p2p, "redis-client", topicName)
 		if err != nil {
@@ -50,30 +52,14 @@ func Pub(topicName string, message string) error {
 		}
 		pss.join[topicName] = p
 		go p.PubLoop()
-		go func() {
-			ticker := time.NewTicker(5 * time.Second)
-			defer ticker.Stop()
-			for {
-				<-ticker.C
-				peers := p.PeerList()
-				// Iterate over the list of peers
-				for _, p := range peers {
-					// Generate the pretty version of the peer ID
-					peerid := p.Pretty()
-					// Add the peer ID to the peer box
-					fmt.Println(peerid)
-				}
-			}
-		}()
+		go p.printPeer()
 	}
 	ps := pss.join[topicName]
 	ps.Outbound <- message
 	return nil
 }
 
-func Sub(topicName string) (*PubSub, error) {
-	aa := pss
-	fmt.Println(&aa)
+func Sub(local *RedSHandle.WriterHandle, topicName string) (*PubSub, error) {
 	if _, ok := pss.join[topicName]; !ok {
 		p, err := JoinPubSub(pss.p2p, "redis-client", topicName)
 		if err != nil {
@@ -81,24 +67,16 @@ func Sub(topicName string) (*PubSub, error) {
 			return nil, err
 		}
 		pss.join[topicName] = p
-		go func() {
-			ticker := time.NewTicker(5 * time.Second)
-			defer ticker.Stop()
-			for {
-				<-ticker.C
-				peers := p.PeerList()
-				// Iterate over the list of peers
-				for _, p := range peers {
-					// Generate the pretty version of the peer ID
-					peerid := p.Pretty()
-					// Add the peer ID to the peer box
-					fmt.Println(peerid)
-				}
-			}
-		}()
+		go p.SubLoop()
+		go p.Writer()
+		go p.printPeer()
 	}
+	lp := fmt.Sprintf("%p", local)
+	if _, ok := pss.writer[topicName]; !ok {
+		pss.writer[topicName] = make(map[string]*RedSHandle.WriterHandle)
+	}
+	pss.writer[topicName][lp] = local
 	ps := pss.join[topicName]
-	go ps.SubLoop()
 	return ps, nil
 }
 
@@ -276,6 +254,38 @@ func (cr *PubSub) SubLoop() {
 			// Send the ChatMessage into the message queue
 			cr.Inbound <- *cm
 		}
+	}
+}
+
+// 广播
+func (cr *PubSub) Writer() {
+	for {
+		msg := <-cr.Inbound
+		for key, item := range pss.writer[cr.TopicName] {
+			err := router.WriteBulkStrings(item, []string{cr.TopicName, msg.Message})
+			if err != nil {
+				fmt.Println("write err key:", key)
+				continue
+			}
+		}
+	}
+}
+
+func (cr *PubSub) printPeer() {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+	for {
+		<-ticker.C
+		peers := cr.PeerList()
+		// Iterate over the list of peers
+		for _, p := range peers {
+			// Generate the pretty version of the peer ID
+			peerid := p.Pretty()
+			// Add the peer ID to the peer box
+			fmt.Println(peerid)
+
+		}
+		fmt.Println("------------------------------------------------------------")
 	}
 }
 

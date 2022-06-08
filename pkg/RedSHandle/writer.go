@@ -171,7 +171,6 @@ func (w *WriterHandle) RecursivelyWriteObjects(objs ...interface{}) error {
 			}
 		case string:
 			err := w.WriteBulkString(v)
-			fmt.Println(err)
 			if err != nil {
 				return err
 			}
