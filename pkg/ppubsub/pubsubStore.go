@@ -45,14 +45,11 @@ func NewPubsubStore(ctx context.Context, p2p *p2p.P2P) *pubsubStore {
 
 func Pub(topicName string, message string) error {
 	if _, ok := pss.join[topicName]; !ok {
-		p, err := JoinPubSub(pss.p2p, "redis-client", topicName)
+		_, err := JoinPubSub(pss.p2p, "redis-client", topicName)
 		if err != nil {
 			log.Println(err)
 			return err
 		}
-		pss.join[topicName] = p
-		go p.PubLoop()
-		go p.printPeer()
 	}
 	ps := pss.join[topicName]
 	ps.Outbound <- message
@@ -61,15 +58,11 @@ func Pub(topicName string, message string) error {
 
 func Sub(local *RedSHandle.WriterHandle, topicName string) (*PubSub, error) {
 	if _, ok := pss.join[topicName]; !ok {
-		p, err := JoinPubSub(pss.p2p, "redis-client", topicName)
+		_, err := JoinPubSub(pss.p2p, "redis-client", topicName)
 		if err != nil {
 			log.Println(err)
 			return nil, err
 		}
-		pss.join[topicName] = p
-		go p.SubLoop()
-		go p.Writer()
-		go p.printPeer()
 	}
 	lp := fmt.Sprintf("%p", local)
 	if _, ok := pss.writer[topicName]; !ok {
@@ -178,6 +171,12 @@ func JoinPubSub(p2phost *p2p.P2P, clientName string, topicName string) (*PubSub,
 	//// Start the publish loop
 	//go PubSub.PubLoop()
 
+	pss.join[topicName] = PubSub
+	go PubSub.PubLoop()
+	go PubSub.SubLoop()
+	go PubSub.Writer()
+	go PubSub.printPeer()
+
 	// Return the PubSub
 	return PubSub, nil
 }
@@ -283,7 +282,6 @@ func (cr *PubSub) printPeer() {
 			peerid := p.Pretty()
 			// Add the peer ID to the peer box
 			fmt.Println(peerid)
-
 		}
 		fmt.Println("------------------------------------------------------------")
 	}
