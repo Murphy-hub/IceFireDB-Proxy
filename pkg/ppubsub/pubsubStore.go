@@ -273,7 +273,7 @@ func (cr *PubSub) Writer() {
 }
 
 func (cr *PubSub) printPeer() {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	peersAll := make(map[string]int)
 	for {

@@ -22,7 +22,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -61,7 +60,7 @@ func main() {
 		},
 	}
 	//showBanner()
-	log.Println("Starting Pubsub ...")
+	logrus.Println("Starting Pubsub ...")
 	app.Before = initConfig
 	app.Action = start
 	err := app.Run(os.Args)
