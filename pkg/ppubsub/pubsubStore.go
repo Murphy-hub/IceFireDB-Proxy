@@ -9,6 +9,7 @@ import (
 	"github.com/IceFireDB/IceFireDB-Proxy/pkg/router"
 	"github.com/libp2p/go-libp2p-core/peer"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	"github.com/sirupsen/logrus"
 	"log"
 	"sync"
 	"time"
@@ -190,6 +191,7 @@ func (cr *PubSub) PubLoop() {
 			return
 
 		case message := <-cr.Outbound:
+			logrus.Infof("Outbound Message: %s", message)
 			// Create a ChatMessage
 			m := chatmessage{
 				Message:    message,
@@ -251,6 +253,7 @@ func (cr *PubSub) SubLoop() {
 
 			// Send the ChatMessage into the message queue
 			cr.Inbound <- *cm
+			logrus.Infof("Inbound Message: %s", cm.Message)
 		}
 	}
 }
