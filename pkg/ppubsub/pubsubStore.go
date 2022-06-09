@@ -190,7 +190,6 @@ func (cr *PubSub) PubLoop() {
 			return
 
 		case message := <-cr.Outbound:
-			fmt.Println(message)
 			// Create a ChatMessage
 			m := chatmessage{
 				Message:    message,
@@ -261,7 +260,7 @@ func (cr *PubSub) Writer() {
 	for {
 		msg := <-cr.Inbound
 		for key, item := range pss.writer[cr.TopicName] {
-			err := router.WriteBulkStrings(item, []string{cr.TopicName, msg.Message})
+			err := router.WriteBulkStrings(item, []string{"message", cr.TopicName, msg.Message})
 			if err != nil {
 				fmt.Println("write err key:", key)
 				continue
@@ -273,6 +272,7 @@ func (cr *PubSub) Writer() {
 func (cr *PubSub) printPeer() {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
+	peersAll := make(map[string]int)
 	for {
 		<-ticker.C
 		peers := cr.PeerList()
@@ -281,9 +281,13 @@ func (cr *PubSub) printPeer() {
 			// Generate the pretty version of the peer ID
 			peerid := p.Pretty()
 			// Add the peer ID to the peer box
-			fmt.Println(peerid)
+			if _, ok := peersAll[peerid]; ok {
+				peersAll[peerid]++
+			} else {
+				fmt.Println("New Peer:", peerid)
+				peersAll[peerid] = 0
+			}
 		}
-		fmt.Println("------------------------------------------------------------")
 	}
 }
 

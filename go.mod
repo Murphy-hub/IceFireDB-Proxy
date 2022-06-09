@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/alicebob/miniredis/v2 v2.17.0
+	github.com/gizak/termui/v3 v3.1.0
 	github.com/gomodule/redigo v1.8.8
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/ipfs/go-cid v0.0.7
